@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 char ouflow_flag = 0; // Flag for Integer Overflow and Integer Underflow Check
+char div_zero_flag = 0;
 
 char* delete_space(char *str) {  // 2. 입력받은 문자열에서 공백을 지워주는 함수
 	char* ret = (char *)calloc(sizeof(char), 0x200); // 입력받은 문자열(init_str)에서 spacebar를 제거한 문자열을 저장해둘 공간을 할당받은 후, 그 주소를 ret에 저장함
@@ -185,7 +186,8 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 						num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
 
 						if (num2 == 0) {
-							printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n");
+							printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
+							div_zero_flag = 1;
 							return;
 						}
 						res = num1 / num2;
@@ -203,7 +205,8 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 						num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
 
 						if (num2 == 0) {
-							printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n");
+							printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
+							div_zero_flag = 1;
 							return;
 						}
 						res = num1 % num2;
@@ -317,7 +320,8 @@ void total_calc(char **formula_arr) { // 괄호가 없어진 계산식을 모두
 				num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
 
 				if (num2 == 0) {
-					printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n");
+					printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
+					div_zero_flag = 1;
 					return;
 				}
 				res = num1 / num2;
@@ -333,7 +337,8 @@ void total_calc(char **formula_arr) { // 괄호가 없어진 계산식을 모두
 				num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
 
 				if (num2 == 0) {
-					printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n");
+					printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
+					div_zero_flag = 1;
 					return;
 				}
 				res = num1 % num2;
@@ -564,6 +569,7 @@ int main() {
 	printf("!!!!!!!!!!!!!!!!!!!!!!!!!!    {!경고!} 불필요한 괄호 사용은 최대한 자제하시오 {!경고!}    !!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n\n\n\n");
 
 	while (1) { // 무한 반복문 시작
+		div_zero_flag = 0;
 		ouflow_flag = 0;
 
 		init_str = (char *)calloc(sizeof(char), 0x200); // init_str에 문자열을 저장하기 위해 동적으로 메모리를 할당받음
@@ -612,7 +618,16 @@ int main() {
 
 		formula_arr = parser(formula); // formula_arr에 피연산항과 연산자가 순서대로 담김. ex) formula == "12*(82-2)"|| formula_arr == { "12", "*", "(", "82", "-", "2", ")" }
 
-		bracket_calc(formula_arr);
+		bracket_calc(formula_arr);  // 괄호 안에 있는 식 먼저 연산
+		if (div_zero_flag == 1) { // 0으로 나눌 경우 예외처리
+			free(init_str);
+			free(formula);
+			for (int i = 0; formula_arr[i] != NULL; i++) {
+				free(formula_arr[i]);
+			}
+			free(formula_arr);
+			continue;
+		} // 0으로 나눌 경우 예외처리 끝
 		if (ouflow_flag == 1) {
 			printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 			printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Overflow <<<<!!!!!!!!!!!!!!!!!!!\n");
@@ -646,7 +661,16 @@ int main() {
 			continue;
 		}
 
-		total_calc(formula_arr);
+		total_calc(formula_arr); // 괄호가 없어진 수식을 계산해서 결괏값을 출력
+		if (div_zero_flag == 1) { // 0으로 나눌 경우 예외처리
+			free(init_str);
+			free(formula);
+			for (int i = 0; formula_arr[i] != NULL; i++) {
+				free(formula_arr[i]);
+			}
+			free(formula_arr);
+			continue;
+		} // 0으로 나눌 경우 예외처리 끝
 		if (ouflow_flag == 1) {
 			printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 			printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Overflow <<<<!!!!!!!!!!!!!!!!!!!\n");
