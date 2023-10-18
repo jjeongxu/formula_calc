@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 char ouflow_flag = 0; // Flag for Integer Overflow and Integer Underflow Check
-char div_zero_flag = 0;
+char div_zero_flag = 0; // 0으로 나눌 경우 예외처리를 하기 위한 flag
 
 char* delete_space(char *str) {  // 2. 입력받은 문자열에서 공백을 지워주는 함수
 	char* ret = (char *)calloc(sizeof(char), 0x200); // 입력받은 문자열(init_str)에서 spacebar를 제거한 문자열을 저장해둘 공간을 할당받은 후, 그 주소를 ret에 저장함
@@ -60,7 +60,23 @@ void ouflow_check(long long int num1, char op, long long int num2, long long int
 		ouflow_flag = 1;
 	}
 
-	return 0;
+	if (ouflow_flag == 1) {
+		printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Overflow <<<<!!!!!!!!!!!!!!!!!!!\n");
+		printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		printf("\n\n################################################################\n");
+		printf("################## Restarting the Process... ###################\n");
+		printf("################################################################\n\n\n");
+	}
+
+	else if (ouflow_flag == 2) {
+		printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Unerflow <<<<!!!!!!!!!!!!!!!!!!!\n");
+		printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		printf("\n\n################################################################\n");
+		printf("################## Restarting the Process... ###################\n");
+		printf("################################################################\n\n\n");
+	}
 }
 
 char** parser(char *formula) { // 3. formula를 받아서 숫자와 연산자로 구분해주는 함수
@@ -153,21 +169,116 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 
 			for (int i = open_brack + 1; i < close_brack; i++) { // 괄호 안의 식을 계산하는 for문 시작, i는 연산자를 가리키게 된다
 
-				brack_op_flag = 0; // 반복마다 brack_op_flag 0으로 초기화
-				for (int j = open_brack + 1; j < close_brack; j++) { // 괄호 안에 연산자가 있는지 확인하는 for문 시작
-					if (formula_arr[j][0] == '*' || formula_arr[j][0] == '/' || formula_arr[j][0] == '%') {
-						op_idx = j;
-						brack_op_flag = 1;
-						break;
-					}
-				} // 괄호 안에 연산자가 있는지 확인하는 for문 끝
+				do {
+					brack_op_flag = 0; // 반복마다 brack_op_flag 0으로 초기화
+					for (int j = open_brack + 1; j < close_brack; j++) { // 괄호 안에 연산자가 있는지 확인하는 for문 시작
+						if (formula_arr[j][0] == '*' || formula_arr[j][0] == '/' || formula_arr[j][0] == '%') {
+							op_idx = j;
+							brack_op_flag = 1;
+							break;
+						}
+					} // 괄호 안에 연산자가 있는지 확인하는 for문 끝
 
-				if (brack_op_flag == 1) {
-					////// 연산 시작 //////
-					if (formula_arr[op_idx][0] == '*') { // 곱셈
+					if (brack_op_flag == 0) { // 괄호 안에 연산자가 없다면
+						break; // 괄호 안을 계산하는 반복문 탈출
+					}
+
+					if (brack_op_flag == 1) {
+						////// 연산 시작 //////
+						if (formula_arr[op_idx][0] == '*') { // 곱셈
+							num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
+							num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
+							res = num1 * num2;
+							ouflow_check(num1, formula_arr[op_idx][0], num2, res); // ouflow check 시작
+							if (ouflow_flag) {
+								return;
+							} // ouflow_check 끝
+							sprintf(formula_arr[op_idx], "%lld", res);
+
+							erase(formula_arr, op_idx - 1);
+							op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
+							close_brack--;
+							erase(formula_arr, op_idx + 1);
+							close_brack--;
+							i = open_brack + 1;
+						} // 곱셈 끝
+						else if (formula_arr[op_idx][0] == '/') { // 나눗셈
+							num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
+							num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
+
+							if (num2 == 0) {
+								printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
+								div_zero_flag = 1;
+								return;
+							}
+							res = num1 / num2;
+							sprintf(formula_arr[op_idx], "%lld", res);
+
+							erase(formula_arr, op_idx - 1);
+							op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
+							close_brack--;
+							erase(formula_arr, op_idx + 1);
+							close_brack--;
+							i = open_brack + 1;
+						} // 나눗셈 끝
+						else if (formula_arr[op_idx][0] == '%') { // 나머지
+							num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
+							num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
+
+							if (num2 == 0) {
+								printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
+								div_zero_flag = 1;
+								return;
+							}
+							res = num1 % num2;
+							sprintf(formula_arr[op_idx], "%lld", res);
+
+							erase(formula_arr, op_idx - 1);
+							op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
+							close_brack--;
+							erase(formula_arr, op_idx + 1);
+							close_brack--;
+							i = open_brack + 1;
+						} // 나머지 끝
+					}
+				} while (brack_op_flag != 0); // 괄호 안에 곱셈, 나눗셈, 나머지 연산자 있을 경우 끝
+
+				
+				do {
+					brack_op_flag = 0;
+					for (int j = open_brack + 1; j < close_brack; j++) {
+						if (formula_arr[j][0] == '+' || (formula_arr[j][0] == '-' && formula_arr[j][1] == NULL)) {
+							op_idx = j;
+							brack_op_flag = 1;
+							break;
+						}
+					}
+
+					if (brack_op_flag == 0) { // 괄호 안에 연산자가 없다면
+						break; // 괄호 안을 계산하는 반복문 탈출
+					}
+
+					if (formula_arr[op_idx][0] == '+') { // 덧셈
 						num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
 						num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
-						res = num1 * num2;
+						res = num1 + num2;
+						ouflow_check(num1, formula_arr[op_idx][0], num2, res); // ouflow check 시작
+						if (ouflow_flag) {
+							return;
+						} // ouflow_check 끝
+						sprintf(formula_arr[op_idx], "%lld", res);
+
+						erase(formula_arr, op_idx - 1);
+						close_brack--;
+						op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
+						erase(formula_arr, op_idx + 1);
+						close_brack--;
+						i = open_brack + 1;
+					} // 덧셈 끝
+					else if (formula_arr[op_idx][0] == '-') { // 뺄셈
+						num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
+						num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
+						res = num1 - num2;
 						ouflow_check(num1, formula_arr[op_idx][0], num2, res); // ouflow check 시작
 						if (ouflow_flag) {
 							return;
@@ -180,94 +291,8 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 						erase(formula_arr, op_idx + 1);
 						close_brack--;
 						i = open_brack + 1;
-					} // 곱셈 끝
-					else if (formula_arr[op_idx][0] == '/') { // 나눗셈
-						num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
-						num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
-
-						if (num2 == 0) {
-							printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
-							div_zero_flag = 1;
-							return;
-						}
-						res = num1 / num2;
-						sprintf(formula_arr[op_idx], "%lld", res);
-
-						erase(formula_arr, op_idx - 1);
-						op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
-						close_brack--;
-						erase(formula_arr, op_idx + 1);
-						close_brack--;
-						i = open_brack + 1;
-					} // 나눗셈 끝
-					else if (formula_arr[op_idx][0] == '%') { // 나머지
-						num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
-						num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
-
-						if (num2 == 0) {
-							printf("어떤 수를 0으로 나눌 수 없습니다\n계산식을 다시 입력해주세요.\n\n\n\n");
-							div_zero_flag = 1;
-							return;
-						}
-						res = num1 % num2;
-						sprintf(formula_arr[op_idx], "%lld", res);
-
-						erase(formula_arr, op_idx - 1);
-						op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
-						close_brack--;
-						erase(formula_arr, op_idx + 1);
-						close_brack--;
-						i = open_brack + 1;
-					} // 나머지 끝
-				} // 괄호 안에 곱셈, 나눗셈, 나머지 연산자 있을 경우 끝
-
-				brack_op_flag = 0;
-				for (int j = open_brack + 1; j < close_brack; j++) {
-					if (formula_arr[j][0] == '+' || (formula_arr[j][0] == '-' && formula_arr[j][1] == NULL)) {
-						op_idx = j;
-						brack_op_flag = 1;
-						break;
-					}
-				}
-
-				if (brack_op_flag == 0) { // 괄호 안에 연산자가 없다면
-					break; // 괄호 안을 계산하는 반복문 탈출
-				}
-
-				if (formula_arr[op_idx][0] == '+') { // 덧셈
-					num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
-					num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
-					res = num1 + num2;
-					ouflow_check(num1, formula_arr[op_idx][0], num2, res); // ouflow check 시작
-					if (ouflow_flag) {
-						return;
-					} // ouflow_check 끝
-					sprintf(formula_arr[op_idx], "%lld", res);
-
-					erase(formula_arr, op_idx - 1);
-					close_brack--;
-					op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
-					erase(formula_arr, op_idx + 1);
-					close_brack--;
-					i = open_brack + 1;
-				} // 덧셈 끝
-				else if (formula_arr[op_idx][0] == '-') { // 뺄셈
-					num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
-					num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
-					res = num1 - num2;
-					ouflow_check(num1, formula_arr[op_idx][0], num2, res); // ouflow check 시작
-					if (ouflow_flag) {
-						return;
-					} // ouflow_check 끝
-					sprintf(formula_arr[op_idx], "%lld", res);
-
-					erase(formula_arr, op_idx - 1);
-					op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
-					close_brack--;
-					erase(formula_arr, op_idx + 1);
-					close_brack--;
-					i = open_brack + 1;
-				} // 뺄셈 끝
+					} // 뺄셈 끝
+				} while (brack_op_flag != 0);
 			} // 괄호 안의 식을 계산하는 for문 끝
 			erase(formula_arr, open_brack); // 여기서 op_idx-1은 '('를 가리킴
 			close_brack--; // 바로 윗줄에서 close_brack이 한 줄 당겨져서 이걸 조정해줌
@@ -548,8 +573,6 @@ int main() {
 	char *formula; // init_str에서 spacebar를 제거한 문자열
 	char **formula_arr;
 	long long int res; // 연산을 수행할 피연산항(num1, num2)과 결괏값을 저장할 변수(res)
-	char op; // 연산자를 저장해둘 변수
-	char brack_idx = 0; // bracket_index; 괄호가 열리면 +1, 괄호가 닫히면 -1
 
 
 	printf("ooooooooooooo                                         .oooo.          .oooooo.             oooo            \n");
@@ -629,13 +652,6 @@ int main() {
 			continue;
 		} // 0으로 나눌 경우 예외처리 끝
 		if (ouflow_flag == 1) {
-			printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Overflow <<<<!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("\n\n################################################################\n");
-			printf("################## Restarting the Process... ###################\n");
-			printf("################################################################\n\n\n");
-
 			free(init_str);
 			free(formula);
 			for (int i = 0; formula_arr[i] != NULL; i++) {
@@ -645,13 +661,6 @@ int main() {
 			continue;
 		}
 		else if (ouflow_flag == 2) {
-			printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Unerflow <<<<!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("\n\n################################################################\n");
-			printf("################## Restarting the Process... ###################\n");
-			printf("################################################################\n\n\n");
-
 			free(init_str);
 			free(formula);
 			for (int i = 0; formula_arr[i] != NULL; i++) {
@@ -661,47 +670,35 @@ int main() {
 			continue;
 		}
 
-		total_calc(formula_arr); // 괄호가 없어진 수식을 계산해서 결괏값을 출력
-		if (div_zero_flag == 1) { // 0으로 나눌 경우 예외처리
-			free(init_str);
-			free(formula);
-			for (int i = 0; formula_arr[i] != NULL; i++) {
-				free(formula_arr[i]);
+		if (formula_arr[1] != NULL) {
+			total_calc(formula_arr); // 괄호가 없어진 수식을 계산해서 결괏값을 출력
+			if (div_zero_flag == 1) { // 0으로 나눌 경우 예외처리
+				free(init_str);
+				free(formula);
+				for (int i = 0; formula_arr[i] != NULL; i++) {
+					free(formula_arr[i]);
+				}
+				free(formula_arr);
+				continue;
+			} // 0으로 나눌 경우 예외처리 끝
+			if (ouflow_flag == 1) {
+				free(init_str);
+				free(formula);
+				for (int i = 0; formula_arr[i] != NULL; i++) {
+					free(formula_arr[i]);
+				}
+				free(formula_arr);
+				continue;
 			}
-			free(formula_arr);
-			continue;
-		} // 0으로 나눌 경우 예외처리 끝
-		if (ouflow_flag == 1) {
-			printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Overflow <<<<!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("\n\n################################################################\n");
-			printf("################## Restarting the Process... ###################\n");
-			printf("################################################################\n\n\n");
-
-			free(init_str);
-			free(formula);
-			for (int i = 0; formula_arr[i] != NULL; i++) {
-				free(formula_arr[i]);
+			else if (ouflow_flag == 2) {
+				free(init_str);
+				free(formula);
+				for (int i = 0; formula_arr[i] != NULL; i++) {
+					free(formula_arr[i]);
+				}
+				free(formula_arr);
+				continue;
 			}
-			free(formula_arr);
-			continue;
-		}
-		else if (ouflow_flag == 2) {
-			printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Unerflow <<<<!!!!!!!!!!!!!!!!!!!\n");
-			printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-			printf("\n\n################################################################\n");
-			printf("################## Restarting the Process... ###################\n");
-			printf("################################################################\n\n\n");
-
-			free(init_str);
-			free(formula);
-			for (int i = 0; formula_arr[i] != NULL; i++) {
-				free(formula_arr[i]);
-			}
-			free(formula_arr);
-			continue;
 		}
 
 		res = strtoll(formula_arr[0], NULL, 10); // 계산의 결과를 long long 정수형으로 변환
