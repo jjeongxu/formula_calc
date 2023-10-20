@@ -136,29 +136,24 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 	char brack_flag; // formula_arr에 괄호가 있는지 검사하기 위한 변수 // 0 == 괄호 없음 && 1 == 괄호 있음
 	int open_brack, close_brack; // 여는 괄호와 닫는 괄호를 가리키는 index
 	long long int num1, num2, res; // 연산을 수행할 두 숫자(num1, num2)와 결괏값을 저장할 변수(res)
-	char brack_op_flag = 0; // 괄호 안의 식에 연산자가 남아있는지 확인하기 위해 쓰이는 flag // 연산자가 없다는 건 괄호 안의 연산을 모두 마쳤다는 뜻임
+	char brack_op_flag = 0; // 괄호 안의 식에 연산자가 남아있는지 확인하기 위해 쓰이는 flag // 괄호 안에 연산자가 없다는 건 괄호 안의 연산을 모두 마쳤다는 뜻임
 	int op_idx = 0; // op가 위치한 index를 저장할 변수
 
 	while (1) { // 괄호가 없어질 때까지 반복
 		brack_flag = 0;
 
-		for (int i = 0; formula_arr[i] != NULL; i++) { // for문 시작 // formula_arr에 괄호가 있다면 brack_flag를 1로 설정
+		for (int i = 0; formula_arr[i] != NULL; i++) { // for문 시작 // formula_arr에 괄호가 있다면 brack_flag를 1로 설정 && 가장 끝에 위치한 괄호의 위치 저장
 			if (formula_arr[i][0] == '(') { // if문 시작 // formula_arr[i]가 괄호인지 검사
 				brack_flag = 1;
-				break;
+				open_brack = i;
 			} // if문 끝
 		} // for문 끝
 
-		if (brack_flag == 0) {
+		if (brack_flag == 0) { // 식에 괄호가 없다면 return 하며 함수를 종료
 			return;
 		}
 
 		if (brack_flag) { // formula_arr에 괄호가 있는 경우 연산을 해줘야함 // 시작
-			for (int i = 0; formula_arr[i] != NULL; i++) { // 가장 끝쪽에 있는 여는 괄호 index 구하기 // for문 시작
-				if (formula_arr[i][0] == '(') { // if문 시작
-					open_brack = i;
-				} // if문 끝
-			} // 가장 끝쪽에 있는 여는 괄호 index 구하기 // for문 끝
 
 			for (int i = open_brack; formula_arr[i] != NULL; i++) { // 여는 괄호와 대응되는 닫는 괄호 구하기
 				if (formula_arr[i][0] == ')') {
@@ -169,7 +164,7 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 
 			for (int i = open_brack + 1; i < close_brack; i++) { // 괄호 안의 식을 계산하는 for문 시작, i는 연산자를 가리키게 된다
 
-				do {
+				do { // 괄호 안의 곱셈, 나눗셈, 나머지를 계산하는 반복문 시작
 					brack_op_flag = 0; // 반복마다 brack_op_flag 0으로 초기화
 					for (int j = open_brack + 1; j < close_brack; j++) { // 괄호 안에 연산자가 있는지 확인하는 for문 시작
 						if (formula_arr[j][0] == '*' || formula_arr[j][0] == '/' || formula_arr[j][0] == '%') {
@@ -179,28 +174,28 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 						}
 					} // 괄호 안에 연산자가 있는지 확인하는 for문 끝
 
-					if (brack_op_flag == 0) { // 괄호 안에 연산자가 없다면
-						break; // 괄호 안을 계산하는 반복문 탈출
+					if (brack_op_flag == 0) { // 괄호 안에 곱셈, 나눗셈, 나머지 연산자가 없다면
+						break; // 괄호 안의 곱셈, 나눗셈, 나머지 계산하는 반복문 탈출
 					}
 
-					if (brack_op_flag == 1) {
+					if (brack_op_flag == 1) { // 괄호 안에 곱셈, 나눗셈, 나머지 연산자가 있다면 연산 시작
 						////// 연산 시작 //////
-						if (formula_arr[op_idx][0] == '*') { // 곱셈
-							num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
-							num2 = strtoll(formula_arr[op_idx + 1], NULL, 10);
-							res = num1 * num2;
+						if (formula_arr[op_idx][0] == '*') { // 곱셈 // op_idx는 연산자의 위치를 가리킴
+							num1 = strtoll(formula_arr[op_idx - 1], NULL, 10); // 연산자 한 칸 앞에 있는 숫자를 num1으로
+							num2 = strtoll(formula_arr[op_idx + 1], NULL, 10); // 연산자 한 칸 뒤에 있는 숫자를 num2로
+							res = num1 * num2; // num1과 num2 연산
 							ouflow_check(num1, formula_arr[op_idx][0], num2, res); // ouflow check 시작
 							if (ouflow_flag) {
 								return;
 							} // ouflow_check 끝
-							sprintf(formula_arr[op_idx], "%lld", res);
+							sprintf(formula_arr[op_idx], "%lld", res); // 연산 결과를 formula_arr에 담아줌
 
-							erase(formula_arr, op_idx - 1);
+							erase(formula_arr, op_idx - 1); // formula_arr에서 num1을 지워줌
 							op_idx--; // 바로 윗 줄에서 op_idx가 한 칸 당겨진 걸 조정해줌
-							close_brack--;
-							erase(formula_arr, op_idx + 1);
-							close_brack--;
-							i = open_brack + 1;
+							close_brack--; // 닫는 괄호가 한 칸 당겨진 걸 조정해줌
+							erase(formula_arr, op_idx + 1); // formula_arr에서 num2를 지워줌
+							close_brack--; // 닫는 괄호가 한 칸 당겨진 걸 조정해줌
+							i = open_brack + 1; // i를 열린 괄호+1 위치로 조정한 후 다시 반복
 						} // 곱셈 끝
 						else if (formula_arr[op_idx][0] == '/') { // 나눗셈
 							num1 = strtoll(formula_arr[op_idx - 1], NULL, 10);
@@ -243,7 +238,7 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 					}
 				} while (brack_op_flag != 0); // 괄호 안에 곱셈, 나눗셈, 나머지 연산자 있을 경우 끝
 
-				
+
 				do {
 					brack_op_flag = 0;
 					for (int j = open_brack + 1; j < close_brack; j++) {
@@ -294,17 +289,17 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 					} // 뺄셈 끝
 				} while (brack_op_flag != 0);
 			} // 괄호 안의 식을 계산하는 for문 끝
-			erase(formula_arr, open_brack); // 여기서 op_idx-1은 '('를 가리킴
+			erase(formula_arr, open_brack); // 괄호 안의 연산을 모두 끝냈으니 열린 괄호 제거
 			close_brack--; // 바로 윗줄에서 close_brack이 한 줄 당겨져서 이걸 조정해줌
-			erase(formula_arr, close_brack); // 여기서 op_idx+1은 ')'를 가리킴
+			erase(formula_arr, close_brack); // 괄호 안의 연산을 모두 끝냈으니 닫는 괄호 제거
 
 		} // formula_arr에 괄호가 있는 경우 // 끝
-	} // while문 끝
+	} // 괄호가 있을 시 괄호 안의 식을 계산하는 무한 반복문 끝
 
 }
 
 void total_calc(char **formula_arr) { // 괄호가 없어진 계산식을 모두 계산하는 함수
-	char op_flag; // 연산자가 있는지 검사하기 위해 쓰이는 flag // op_flag가 0이라면 이는 계산이 모두 끝나고 결괏값만 남았다는 뜻이므로 함수를 종료한다
+	char op_flag; // 연산자가 있는지 검사하기 위해 쓰이는 flag // op_flag가 0이라면 연산자가 없다는 뜻. 이는 계산이 모두 끝나고 결괏값만 남았다는 뜻이므로 함수를 종료한다
 	long long int num1, num2, res;
 	int op_idx; // 연산자(op)의 위치를 가리키는 idx
 
@@ -319,7 +314,7 @@ void total_calc(char **formula_arr) { // 괄호가 없어진 계산식을 모두
 			}
 		} // 괄호 안에 곱셈, 나눗셈 , 나머지 연산자가 있는지 확인하는 for문 끝
 
-		if (op_flag == 0) {
+		if (op_flag == 0) { // 곱셈, 나눗셈, 나머지 연산자가 없다면 -> 곱셈, 나눗셈, 나머지를 계산하는 반복문 탈출
 			break;
 		}
 
@@ -470,42 +465,14 @@ void res_comma(long long int target) { // 숫자에 콤마(,)를 찍어줌
 }
 
 void to_binary(long long int target) { // 5. 결과값을 2진수로 변환해주는 함수
-	char *res = (char *)calloc(sizeof(char), 0x200); // 2진수로 변환한 결과를 담을 문자열
-	char *temp = (char *)calloc(sizeof(char), 0x200); // 임시 저장소로 쓰임
+	char start_flag = 0; // 비트가 어디서부터 시작되는지 가리킴. 이걸 설정 안 해주면 진수 변환값 출력 시 앞에 0이 다 붙어서 지저분함
+	char conv_bit; // 비트 연산 결과를 저장해둘 변수
 
-	if (target > 0) { // (1) 계산의 결괏값이 양수인 경우
-		while (target > 0) { // 2진수 변환 시작 ( sprintf(res, "...", res) 하면 값이 duplicated 되는 문제가 있어 추가로 변수 temp를 도입했음
-			sprintf(res, "%lld%s", target % 2, temp);
-			target = target / 2;
-
-			strcpy(temp, res);
-		} // 2진수 변환 끝 // 이것도 자세한 동작 과정 이해하기 위해선 걍 while문 일일이 따라가보는 수밖에 없음. 주석 한 줄로 표현하기엔 어려움이 있음.
-
-		// 4개 단위로 끊기게 하기 시작
-		if (strlen(res) % 4 == 1) {
-			sprintf(res, "000%s", temp);
-		}
-		else if (strlen(res) % 4 == 2) {
-			sprintf(res, "00%s", temp);
-		}
-		else if (strlen(res) % 4 == 3) {
-			sprintf(res, "0%s", temp);
-		}
-		// 4개 단위로 끊기게 하기 끝
-
-		for (int i = 0; i < strlen(res); i++) {
-			if (i % 4 == 0 && i != 0) {
-				printf(" ");
-			}
-			printf("%c", res[i]);
-		}
-	} // (1) 결괏값이 양수인 경우 끝
-
-	else if (target == 0) {
-		printf("0");
+	if (target == 0) { // 결괏값이 0인 경우 그냥 0 출력
+	printf("0");
 	}
 
-	else { // res가 음수일 경우 시작
+	else if (target < 0) { // res가 음수일 경우 시작
 		for (int i = 63; i >= 0; i--) {
 			if ((i + 1) % 4 == 0 && i != 0) {
 				printf(" ");
@@ -514,57 +481,71 @@ void to_binary(long long int target) { // 5. 결과값을 2진수로 변환해�
 		}
 	} // res가 음수일 경우 끝
 
-	free(res);
-	free(temp);
+	else { // 결괏값이 양수인 경우
+		for (int i = 63; i >= 0; i--) { // 64번 반복, (long long int == 8byte == 64bit 크기 변수이므로)
+			conv_bit = (target >> i) & 1;
+
+			if (conv_bit != 0 && start_flag == 0) {
+				start_flag = i;
+			}
+
+			if (start_flag != 0) { // start_flag가 설정 된 이후
+				if (start_flag == i) { // 보기 좋게 앞을 0으로 채워줘서 4자리수 맞추기
+					if ((i + 1) % 4 == 1) {
+						printf("000");
+					}
+					else if ((i + 1) % 4 == 2) {
+						printf("00");
+					}
+					else if ((i + 1) % 4 == 1) {
+						printf("0");
+					}
+				} // 보기 좋게 앞을 0으로 채워줘서 4자리수 맞추기 끝
+
+				printf("%d", conv_bit);
+				if (i % 4 == 0 && i != 0) { // 4칸마다 띄어쓰기
+					printf(" ");
+				}
+			} // start_flag가 설정 된 이후 끝
+		} // 64번 반복 for문 끝
+	} // 결괏값이 양수인 경우 끝
 }
 
 void to_hex(long long int target) { // 결괏값을 16진수로 변환해주는 함수
-	char *res = (char *)calloc(sizeof(char), 0x200);
-	char *temp = (char *)calloc(sizeof(char), 0x200);
-	char hex[] = "0123456789abcdef";
-	int i = 0;
-
-	while (target > 0) {
-		temp[i++] = hex[target % 16]; // temp에 16진수 변환값이 역으로 들어감
-		target = target / 16;
-	}
-
-	i = 0; // i를 다시 0으로 초기화
-	for (int j = strlen(temp) - 1; j >= 0; j--) { // temp의 값을 거꾸로 다시 res에 담아줌 -> res에는 정방향 변환값이 들어가게 됨
-		res[i++] = temp[j];
-	}
+	char hex[] = "0123456789ABCDEF";
+	char start_flag = 0;
+	char conv_char;
 
 	printf("0x");
-	for (int i = 0; res[i] != NULL; i++) {
-		printf("%c", res[i]);
-	}
+	for (int i = 15; i >= 0; i--) {
+		conv_char = (target >> (i * 4)) & 15;
 
-	free(temp);
-	free(res);
+		if (conv_char != 0 && start_flag == 0) {
+			start_flag = 1;
+		}
+
+		if (start_flag == 1) {
+			printf("%c", hex[conv_char]);
+		}
+	}
 }
 
 void to_oct(long long int target) { // 결괏값을 8진수로 변환해주는 함수
-	char *res = (char *)calloc(sizeof(char), 0x200);
-	char *temp = (char *)calloc(sizeof(char), 0x200);
-	int i = 0;
-
-	while (target > 0) {
-		temp[i++] = '0' + target % 8; // temp에 8진수 변환값이 역으로 들어감
-		target = target / 8;
-	}
-
-	i = 0; // i를 다시 0으로 초기화
-	for (int j = strlen(temp) - 1; j >= 0; j--) { // temp의 값을 거꾸로 다시 res에 담아줌 -> res에는 정방향 변환값이 들어가게 됨
-		res[i++] = temp[j];
-	}
+	char start_flag = 0;
+	char conv_char;
 
 	printf("0");
-	for (int i = 0; i < strlen(res); i++) {
-		printf("%c", res[i]);
-	}
+	for (int i = 20; i >= 0; i--) {
+		conv_char = (target >> (i * 3)) & 7;
 
-	free(temp);
-	free(res);
+		if ( (conv_char != 0) && (start_flag == 0) ) {
+			start_flag = 1;
+		}
+
+		if (start_flag == 1) {
+			printf("%d", conv_char);
+		}
+	}
 }
 
 
@@ -586,10 +567,10 @@ int main() {
 	printf("#################################################### [이용 방법] ####################################################\n");
 	printf("$$$$$$$$$$$$$$$$$                      이 계산기는 다항식 integer 계산기입니다.                     $$$$$$$$$$$$$$$$$\n");
 	printf("$$$$$$$$$$$$$$$$$                          +, -, *, /, %% 연산이 지원됩니다.                         $$$$$$$$$$$$$$$$$\n");
-	printf("$$$$$$$$$$$$$$$$$             입력 예시: ex) 8 * ( (3-5) * (9+4) + 5 ) / 4 + 3 * (8+4)              $$$$$$$$$$$$$$$$$\n");
+	printf("$$$$$$$$$$$$$$$$$           입력 예시: ex) 8 * ( (3-5) * (9+4) + 51 %% 3 ) / 4 + 3 * (8+4)           $$$$$$$$$$$$$$$$$\n");
 	printf("$$$$$$$$$$$$$$$$$        프로그램을 종료하시려면 \"exit\" 또는 \"quit\" 또는 \"q\"을 입력해주세요         $$$$$$$$$$$$$$$$$\n");
-	printf("########################## Credit: 김정수(팀장), 김주현(팀원), 김현성(팀원), 정창윤(팀원) ###########################\n\n");
-	printf("!!!!!!!!!!!!!!!!!!!!!!!!!!    {!경고!} 불필요한 괄호 사용은 최대한 자제하시오 {!경고!}    !!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n\n\n\n");
+	printf("########################## Credit: 김정수(팀장), 김주현(팀원), 김현성(팀원), 정창윤(팀원) ###########################\n\n\n\n");
+	//printf("!!!!!!!!!!!!!!!!!!!!!!!!!!    {!경고!} 불필요한 괄호 사용은 최대한 자제하시오 {!경고!}    !!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n\n\n\n");
 
 	while (1) { // 무한 반복문 시작
 		div_zero_flag = 0;
@@ -611,7 +592,7 @@ int main() {
 			init_str[strlen(init_str) - 1] = '\0';  // fgets로 입력받은 문자열의 마지막 원소는 '\n'이기 때문에, '\n'만 입력받은 게 아닌 경우라면 '\n'을 '\0'으로 바꿔줌
 		}
 		else { // 아무 것도 입력하지 않고 \n만 입력했을 경우
-			printf("입력값이 없습니다.\n계산식을 다시 입력해주세요.\n\n");
+			printf("입력값이 없습니다.\n계산식을 다시 입력해주세요.\n\n\n\n");
 
 			free(init_str); // init_str이 calloc()을 통해 할당받았던 동적 메모리 공간을 운영체제에게 돌려줌
 			init_str = NULL;
@@ -629,7 +610,7 @@ int main() {
 		formula = delete_space(init_str); // 입력받은 계산식인 init_str에서 delete_space()함수를 통해 spacebar를 제거한 뒤, 이 문자열이 있는 메모리의 주소를 formula에 저장
 
 		if (is_valid(formula)) { // 숫자, 연산자 이외의 문자가 있는지 is_valid()함수를 통해 검사함
-			printf("정수형 숫자와 연산자(+, -, *, /, %%)만 입력받을 수 있습니다.\n계산식을 다시 입력해주세요.\n\n");
+			printf("정수형 숫자와 연산자(+, -, *, /, %%)만 입력받을 수 있습니다.\n계산식을 다시 입력해주세요.\n\n\n\n");
 
 			free(init_str);  // init_str가 할당받은 공간을 운영체제에게 돌려줌
 			init_str = NULL;
