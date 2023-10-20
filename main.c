@@ -22,7 +22,7 @@ char* delete_space(char *str) {  // 2. 입력받은 문자열에서 공백을 �
 }
 
 char is_valid(char *str) { // formula(init_str에서 spacebar를 제거한 문자열)에 숫자와 연산자 외에 다른 문자가 있는지 검사 
-	char flag = 0;
+	char flag = 0; // 올바른 문자만으로 이루어진 문자열이면 0을, 그렇지 않으면 1을 반환
 	char valid[] = "0123456789+-*/%()"; // 우리가 받을 수 있는 문자들의 집합
 	int formula_char; // formula에서 문자를 하나씩 떼와서 strchr를 통해 검사한 결괏값을 저장해놓을 변수
 
@@ -82,13 +82,13 @@ void ouflow_check(long long int num1, char op, long long int num2, long long int
 char** parser(char *formula) { // 3. formula를 받아서 숫자와 연산자로 구분해주는 함수
 
 	char **res = (char**)calloc(sizeof(char*), sizeof(char*) * 100); // 숫자 문자열들과 연산자 문자열들이 담길 배열
-	int res_count = 0; // res를 위해 쓰일 index
-	char temp[100] = { 0, }; // 임시로 쓰일 문자열 공간
-	int j = 0; // temp를 위해 쓰일 index
+	int res_count = 0; // res를 위해 쓰일 index, res_count는 res 배열 안의 유효한 마지막 원소 한 칸 뒤를 가리키고 있다.
+	char temp[100] = { 0, }; // 임시로 숫자를 담아두기 위해 쓰일 문자열 공간
+	int temp_count = 0; // temp를 위해 쓰일 index, temp_count는 temp안의 유효한 마지막 문자 한 칸 뒤를 가리키고 있다.
 
 	for (int i = 0; formula[i] != NULL; i++) {
 		if (isdigit(formula[i])) { // formula[i]가 숫자일 경우
-			temp[j++] = formula[i]; // formula[i]를 문자열 temp에 붙여줌
+			temp[temp_count++] = formula[i]; // formula[i]를 문자열 temp에 붙여줌
 			continue;
 		} // formula[i]가 숫자일 경우 끝
 
@@ -97,14 +97,14 @@ char** parser(char *formula) { // 3. formula를 받아서 숫자와 연산자로
 				res[res_count] = (char*)calloc(sizeof(char), 0x40); // res 배열에 원소 추가해줌
 				sprintf(res[res_count++], "%s", temp);
 				memset(temp, 0, sizeof(temp)); // res 배열에 원소 추가했으니 문자열 temp를 NULL로 초기화
-				j = 0;
+				temp_count = 0;
 			}
 			if (formula[i] == '(' || formula[i] == ')') { // formula[i]가 괄호일 경우
 				res[res_count] = (char*)calloc(sizeof(char), 0x10); // formula[i]를 배열 res에 넣어줌
 				sprintf(res[res_count++], "%c", formula[i]);
 			} // formula[i]가 괄호일 경우 끝
-			else if (formula[i] == '-' && (res[0] == 0 || strcmp(res[res_count - 1], "+") == 0 || strcmp(res[res_count - 1], "-") == 0 || strcmp(res[res_count - 1], "*") == 0 || strcmp(res[res_count - 1], "/") == 0 || strcmp(res[res_count - 1], "%") == 0)) { // formula[i]가 '-'이고 res가 비어있다면, formula[i]는 연산자가 아니라 부호이므로 temp에 추가해줌 && res의 마지막 원소가 연산자라면 formula[i]는 부호이므로 temp에 추가해줌
-				temp[j++] = formula[i];
+			else if (formula[i] == '-' && (res[0] == 0 || res[res_count - 1][0] == '+' || (res[res_count - 1][0] == '-' && res[res_count-1][1] == NULL) || res[res_count - 1][0] == '*' || res[res_count - 1][0] == '/' || res[res_count - 1][0] == '%' || res[res_count - 1][0] == '(') ) { // formula[i]가 '-'이고 res가 비어있다면, formula[i]는 연산자가 아니라 부호이므로 temp에 추가해줌 && res의 마지막 원소가 연산자라면 formula[i]는 부호이므로 temp에 추가해줌
+				temp[temp_count++] = formula[i];
 			}
 			else { // 이외의 경우. 즉, 연산자인 경우 res에 추가
 				res[res_count] = (char*)calloc(sizeof(char), 0x10);
@@ -456,9 +456,7 @@ void res_comma(long long int target) { // 숫자에 콤마(,)를 찍어줌
 		res[0] = '-';
 	} // (2) target(==res)가 음수일 경우 끝
 
-	for (int i = 0; i < strlen(res); i++) {
-		printf("%c", res[i]);
-	}
+	printf("%s", res);
 
 	free(temp);
 	free(res);
@@ -552,7 +550,7 @@ void to_oct(long long int target) { // 결괏값을 8진수로 변환해주는 �
 int main() {
 	char *init_str; // 최초의 계산식 문자열을 입력받을 공간
 	char *formula; // init_str에서 spacebar를 제거한 문자열
-	char **formula_arr;
+	char **formula_arr; // formula에서 숫자와 연산자들로 구분한 원소들을 담아둘 배열
 	long long int res; // 연산을 수행할 피연산항(num1, num2)과 결괏값을 저장할 변수(res)
 
 
