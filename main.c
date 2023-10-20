@@ -62,7 +62,7 @@ void ouflow_check(long long int num1, char op, long long int num2, long long int
 
 	if (ouflow_flag == 1) {
 		printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-		printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Overflow <<<<!!!!!!!!!!!!!!!!!!!\n");
+		printf("!!!!!!!!!!!!!!!>>>> Integer Overflow Detected <<<<!!!!!!!!!!!!!!\n");
 		printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 		printf("\n\n################################################################\n");
 		printf("################## Restarting the Process... ###################\n");
@@ -71,7 +71,7 @@ void ouflow_check(long long int num1, char op, long long int num2, long long int
 
 	else if (ouflow_flag == 2) {
 		printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-		printf("!!!!!!!!!!!!!!!!!!!>>>> Integer Unerflow <<<<!!!!!!!!!!!!!!!!!!!\n");
+		printf("!!!!!!!!!!!!!!!>>>> Integer Unerflow Detected <<<<!!!!!!!!!!!!!!\n");
 		printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 		printf("\n\n################################################################\n");
 		printf("################## Restarting the Process... ###################\n");
