@@ -100,21 +100,21 @@ char** parser(char *formula) { // 3. formula를 받아서 숫자와 연산자로
 				j = 0;
 			}
 			if (formula[i] == '(' || formula[i] == ')') { // formula[i]가 괄호일 경우
-				res[res_count] = (char*)calloc(sizeof(char), 0x20); // formula[i]를 배열 res에 넣어줌
+				res[res_count] = (char*)calloc(sizeof(char), 0x10); // formula[i]를 배열 res에 넣어줌
 				sprintf(res[res_count++], "%c", formula[i]);
 			} // formula[i]가 괄호일 경우 끝
 			else if (formula[i] == '-' && (res[0] == 0 || strcmp(res[res_count - 1], "+") == 0 || strcmp(res[res_count - 1], "-") == 0 || strcmp(res[res_count - 1], "*") == 0 || strcmp(res[res_count - 1], "/") == 0 || strcmp(res[res_count - 1], "%") == 0)) { // formula[i]가 '-'이고 res가 비어있다면, formula[i]는 연산자가 아니라 부호이므로 temp에 추가해줌 && res의 마지막 원소가 연산자라면 formula[i]는 부호이므로 temp에 추가해줌
 				temp[j++] = formula[i];
 			}
 			else { // 이외의 경우. 즉, 연산자인 경우 res에 추가
-				res[res_count] = (char*)calloc(sizeof(char), 0x20);
+				res[res_count] = (char*)calloc(sizeof(char), 0x10);
 				sprintf(res[res_count++], "%c", formula[i]);
 			}
 		} // formula[i]가 '+', '-', '*', '/', '%', '(', ')' 일 경우(else문) 끝
 	} // for문 끝
 
 	if (temp[0] != 0) { // for문을 빠져나온 후 문자열 temp에 숫자가 저장돼있다면 이를 res에 추가
-		res[res_count] = (char*)calloc(sizeof(char), 0x20);
+		res[res_count] = (char*)calloc(sizeof(char), 0x40);
 		sprintf(res[res_count], "%s", temp);
 		memset(temp, 0, sizeof(temp));
 	}
@@ -142,7 +142,7 @@ void bracket_calc(char** formula_arr) { // 괄호 안의 식을 먼저 연산하
 	while (1) { // 괄호가 없어질 때까지 반복
 		brack_flag = 0;
 
-		for (int i = 0; formula_arr[i] != NULL; i++) { // for문 시작 // formula_arr에 괄호가 있다면 brack_flag를 1로 설정 && 가장 끝에 위치한 괄호의 위치 저장
+		for (int i = 0; formula_arr[i] != NULL; i++) { // for문 시작 // formula_arr에 괄호가 있다면 brack_flag를 1로 설정 && 가장 끝에 위치한 여는 괄호의 위치 저장
 			if (formula_arr[i][0] == '(') { // if문 시작 // formula_arr[i]가 괄호인지 검사
 				brack_flag = 1;
 				open_brack = i;
@@ -651,7 +651,8 @@ int main() {
 			continue;
 		}
 
-		if (formula_arr[1] != NULL) {
+		if (formula_arr[1] != NULL) { // 만약 formula_arr가 괄호로 덮인 수식이라면, formula[0]은 계산의 결괏값이고, formula_arr[1] == NULL이다. 
+													// 따라서 formula_arr[1]이 NULL이 아닌 경우에만 total_calc() 함수를 호출해준다
 			total_calc(formula_arr); // 괄호가 없어진 수식을 계산해서 결괏값을 출력
 			if (div_zero_flag == 1) { // 0으로 나눌 경우 예외처리
 				free(init_str);
@@ -662,7 +663,7 @@ int main() {
 				free(formula_arr);
 				continue;
 			} // 0으로 나눌 경우 예외처리 끝
-			if (ouflow_flag == 1) {
+			if (ouflow_flag == 1) { // overflow 예외처리
 				free(init_str);
 				free(formula);
 				for (int i = 0; formula_arr[i] != NULL; i++) {
@@ -670,8 +671,8 @@ int main() {
 				}
 				free(formula_arr);
 				continue;
-			}
-			else if (ouflow_flag == 2) {
+			} // overflow 예외처리 끝
+			else if (ouflow_flag == 2) { // underflow 예외처리
 				free(init_str);
 				free(formula);
 				for (int i = 0; formula_arr[i] != NULL; i++) {
@@ -679,7 +680,7 @@ int main() {
 				}
 				free(formula_arr);
 				continue;
-			}
+			} // underflow 예외처리 끝
 		}
 
 		res = strtoll(formula_arr[0], NULL, 10); // 계산의 결과를 long long 정수형으로 변환
