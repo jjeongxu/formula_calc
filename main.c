@@ -100,14 +100,14 @@ char** parser(char *formula) { // 3. formula를 받아서 숫자와 연산자로
 				temp_count = 0;
 			}
 			if (formula[i] == '(' || formula[i] == ')') { // formula[i]가 괄호일 경우
-				res[res_count] = (char*)calloc(sizeof(char), 0x10); // formula[i]를 배열 res에 넣어줌
+				res[res_count] = (char*)calloc(sizeof(char), 0x40); // formula[i]를 배열 res에 넣어줌
 				sprintf(res[res_count++], "%c", formula[i]);
 			} // formula[i]가 괄호일 경우 끝
 			else if (formula[i] == '-' && (res[0] == 0 || res[res_count - 1][0] == '+' || (res[res_count - 1][0] == '-' && res[res_count-1][1] == NULL) || res[res_count - 1][0] == '*' || res[res_count - 1][0] == '/' || res[res_count - 1][0] == '%' || res[res_count - 1][0] == '(') ) { // formula[i]가 '-'이고 res가 비어있다면, formula[i]는 연산자가 아니라 부호이므로 temp에 추가해줌 && res의 마지막 원소가 연산자라면 formula[i]는 부호이므로 temp에 추가해줌
 				temp[temp_count++] = formula[i];
 			}
 			else { // 이외의 경우. 즉, 연산자인 경우 res에 추가
-				res[res_count] = (char*)calloc(sizeof(char), 0x10);
+				res[res_count] = (char*)calloc(sizeof(char), 0x40);
 				sprintf(res[res_count++], "%c", formula[i]);
 			}
 		} // formula[i]가 '+', '-', '*', '/', '%', '(', ')' 일 경우(else문) 끝
@@ -649,7 +649,7 @@ int main() {
 			continue;
 		}
 
-		if (formula_arr[1] != NULL) { // 만약 formula_arr가 괄호로 덮인 수식이라면, formula[0]은 계산의 결괏값이고, formula_arr[1] == NULL이다. 
+		if (formula_arr[1] != NULL) { // 만약 formula_arr의 전체가 괄호로 덮인 수식이라면, formula[0]은 계산의 결괏값이고, formula_arr[1] == NULL이다. 
 													// 따라서 formula_arr[1]이 NULL이 아닌 경우에만 total_calc() 함수를 호출해준다
 			total_calc(formula_arr); // 괄호가 없어진 수식을 계산해서 결괏값을 출력
 			if (div_zero_flag == 1) { // 0으로 나눌 경우 예외처리
